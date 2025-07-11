@@ -6,7 +6,7 @@ bower_components/
 
 # ─────────────────────────────────────────
 # 🏗️ Build and output directories
-dist/
+# dist/
 build/
 lib-cov/
 coverage/
@@ -86,4 +86,4 @@ vite.config.ts.timestamp-*
 # 📦 Misc
 *.tgz
 .node_repl_history
-packages\create-onetech-app\file.mjs 
+file.mjs 
