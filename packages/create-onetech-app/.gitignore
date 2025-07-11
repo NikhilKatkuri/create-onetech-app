@@ -86,4 +86,4 @@ vite.config.ts.timestamp-*
 # 📦 Misc
 *.tgz
 .node_repl_history
-packages\create-onetech-app\file.mjs 
+file.mjs

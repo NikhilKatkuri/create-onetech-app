@@ -1,0 +1,31 @@
+{
+  "name": "create-onetech-app",
+  "version": "1.0.0",
+  "description": "CLI to scaffold apps",
+  "type": "module",
+  "private": false,
+  "bin": {
+    "create-onetech-app": "./dist/index.js",
+    "onetech-app": "./dist/index.js",
+    "easy-app": "./dist/index.js"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsup src/**/* --format esm --dts --out-dir dist",
+    "start": "node dist/index.js",
+    "create-onetech-app": " ./dist/index.js"
+  },
+  "keywords": [],
+  "author": "Nikhil Katkuri",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.0.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "inquirer": "^12.7.0"
+  }
+}
