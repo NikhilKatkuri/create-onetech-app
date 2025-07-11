@@ -87,3 +87,4 @@ vite.config.ts.timestamp-*
 *.tgz
 .node_repl_history
 file.mjs 
+dist
