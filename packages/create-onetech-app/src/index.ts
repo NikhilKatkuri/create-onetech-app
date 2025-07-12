@@ -5,9 +5,6 @@ import techStacks from "@utils/techstack";
 import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 
-// This CLI tool helps scaffold a new project with your preferred tech stack.
-
-// Type definition for storing all parsed or prompted CLI configurations
 type Props = {
   projectName: string;
   base: string;
@@ -16,13 +13,15 @@ type Props = {
   version: string;
 };
 
-// Prompt the user to enter a project name if it's not passed via CLI
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 async function getProjectName(): Promise<string> {
   const { projectName } = await inquirer.prompt([
     {
       name: "projectName",
       type: "input",
-      message: " Enter your project name:",
+      message: "\uD83D\uDCC1 Enter your project name:",
       default: "my-app",
       validate: (input) => (input ? true : "Project name cannot be empty."),
     },
@@ -30,18 +29,13 @@ async function getProjectName(): Promise<string> {
   return projectName;
 }
 
-// Prompt the user for base (framework), template (build tool), and optional stack features
-async function promptProjectSetup(): Promise<{
-  base: string;
-  template: string;
-  stack: string[];
-}> {
+async function promptProjectSetup(): Promise<{ base: string; template: string; stack: string[] }> {
   const bases = techStacks.map((stack) => stack.base);
   const { base } = await inquirer.prompt([
     {
       name: "base",
       type: "list",
-      message: "🧱 Choose base framework:",
+      message: "\uD83E\uDDF1 Choose base framework:",
       choices: bases,
     },
   ]);
@@ -50,7 +44,7 @@ async function promptProjectSetup(): Promise<{
     {
       name: "template",
       type: "list",
-      message: "📦 Select the build template:",
+      message: "\uD83D\uDCE6 Select the build template:",
       choices: techStacks.find((stack) => stack.base === base)?.templates || [],
     },
   ]);
@@ -59,7 +53,7 @@ async function promptProjectSetup(): Promise<{
     {
       name: "stack",
       type: "checkbox",
-      message: "🧩 Select additional stack tools (optional):",
+      message: "\uD83E\uDDF9 Select additional stack tools (optional):",
       choices: techStacks.find((stack) => stack.base === base)?.stack || [],
       default: techStacks.find((stack) => stack.base === base)?.stack?.slice(0, 1) || [],
     },
@@ -67,22 +61,9 @@ async function promptProjectSetup(): Promise<{
 
   return { base, template, stack };
 }
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 async function main() {
-  /**
-   * This is the main logic of the CLI.
-   * It reads the CLI arguments, determines if any are missing,
-   * and either parses them or prompts the user to complete the configuration.
-   */
   const args = process.argv.slice(2);
-
-  // User’s original CLI path
-  const userDir = process.cwd();
-
-
-  // Initial placeholder for all project config options
   const props: Props = {
     projectName: "",
     base: "",
@@ -91,63 +72,37 @@ async function main() {
     version: "latest",
   };
 
-  // Case: both project name and shorthand (like --react-vite@latest) are provided
-  if (args.length >= 2) {
-    // Extract projectName and shorthand from the arguments.
-    // The shorthand is expected to be in the format: --base-template-stack@version.
-    const [projectName, shorthand] = args;
+  const userDir = process.cwd();
 
-    // Remove the '--' and split the shorthand into its components
-    const cleanArgs = shorthand.replace(/^--/, "");
-    // Split the cleaned shorthand into components.
-    // The shorthand is expected to be in the format: base-template-stack@version.
-    const [combo, version = "latest"] = cleanArgs.split("@");
-    // Split the combo into base, template, and stack components.
-    // The combo is expected to be in the format: base-template-stack.
-    const [base, template, ...stack] = combo.split("-");
-    // Assign the extracted values to the props object.
-    // The props object will contain projectName, base, template, stack, and version.
-    Object.assign(props, { projectName, base, template, stack, version });
+  // CLI: create-onetech-app blog-app --react --vite-js-tailwind-firebase@latest
+  if (args.length >= 3 && args[1].startsWith("--") && args[2].startsWith("--")) {
+    props.projectName = args[0];
+    props.base = args[1].replace(/^--/, "");
+
+    const [combo, version = "latest"] = args[2].replace(/^--/, "").split("@");
+    const [template, maybeLang, ...stack] = combo.split("-");
+
+    // Support for vite-js / vite-ts style templates
+    props.template = maybeLang === "js" || maybeLang === "ts" ? `${template}-${maybeLang}` : template;
+    props.stack = maybeLang === "js" || maybeLang === "ts" ? stack : [maybeLang, ...stack];
+    props.version = version;
   } else {
-    // Case: either 1 argument or none
-
-    // If a project name is passed (not starting with --), use it; otherwise prompt
-
-    props.projectName =
-      args.length === 1 && !args[0].startsWith("--")
-        ? args[0]
-        : await getProjectName();
-    // If the argument is shorthand (starts with --), parse it
-    if (args.length === 1 && args[0].startsWith("--")) {
-      const cleanArgs = args[0].replace(/^--/, "");
-      const [combo, version = "latest"] = cleanArgs.split("@");
-      const [base, template, ...stack] = combo.split("-");
-      Object.assign(props, { base, template, stack, version });
-    } else {
-      // Otherwise, prompt the user to choose base/template/stack manually
-      const { base, template, stack } = await promptProjectSetup();
-      Object.assign(props, { base, template, stack });
-    }
+    props.projectName = await getProjectName();
+    const { base, template, stack } = await promptProjectSetup();
+    Object.assign(props, { base, template, stack });
   }
 
-  const folderName = props.stack.length ? props.stack.join("-") : "vite-default";
-
-  const templateFolder = path.resolve(
-    __dirname,
-    `../templates/${props.base}/${props.template}` // don't include folderName anymore
-  );
-
+  const templateFolder = path.resolve(__dirname, `../templates/${props.base}/${props.template}`);
   const insertScriptPath = path.join(templateFolder, "scripts", "insert.mjs");
-  const targetDir = path.join(process.cwd(), props.projectName);
+  const targetDir = path.join(userDir, props.projectName);
 
   execSync(
     `node "${insertScriptPath}" "${props.base}" "${props.template}" "${props.stack.join(",")}" "${targetDir}"`,
     {
       stdio: "inherit",
-      cwd: templateFolder, // ensures relative paths work
+      cwd: templateFolder,
     }
   );
-
 }
 
 main();
