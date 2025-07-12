@@ -131,18 +131,23 @@ async function main() {
   }
 
   const folderName = props.stack.length ? props.stack.join("-") : "vite-default";
+
   const templateFolder = path.resolve(
     __dirname,
-    `../templates/${props.base}/${props.template}/${folderName}`
+    `../templates/${props.base}/${props.template}` // don't include folderName anymore
   );
-  const insertScriptPath = path.join(templateFolder, "insert.mjs");
-  const targetDir = path.join(userDir, props.projectName);
 
-  // ▶️ Run the insert script from inside the template folder
-  execSync(`node insert.mjs "${targetDir}"`, {
-    stdio: "inherit",
-    cwd: templateFolder,
-  });
+  const insertScriptPath = path.join(templateFolder, "scripts", "insert.mjs");
+  const targetDir = path.join(process.cwd(), props.projectName);
+
+  execSync(
+    `node "${insertScriptPath}" "${props.base}" "${props.template}" "${props.stack.join(",")}" "${targetDir}"`,
+    {
+      stdio: "inherit",
+      cwd: templateFolder, // ensures relative paths work
+    }
+  );
+
 }
 
 main();

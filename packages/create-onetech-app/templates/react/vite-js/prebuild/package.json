@@ -1,5 +1,5 @@
 {
-  "name": "vite-default",
+  "name": "prebuild",
   "private": true,
   "version": "0.0.0",
   "type": "module",
