@@ -1,7 +1,9 @@
 #!/usr/bin/env node
-
+import path from "path";
 import inquirer from "inquirer";
 import techStacks from "@utils/techstack";
+import { fileURLToPath } from "url";
+import { execSync } from "child_process";
 
 // This CLI tool helps scaffold a new project with your preferred tech stack.
 
@@ -59,12 +61,14 @@ async function promptProjectSetup(): Promise<{
       type: "checkbox",
       message: "🧩 Select additional stack tools (optional):",
       choices: techStacks.find((stack) => stack.base === base)?.stack || [],
-      default: techStacks.find((stack) => stack.base === base)?.stack?.slice(0, 2) || [],
+      default: techStacks.find((stack) => stack.base === base)?.stack?.slice(0, 1) || [],
     },
   ]);
 
   return { base, template, stack };
 }
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function main() {
   /**
@@ -73,6 +77,10 @@ async function main() {
    * and either parses them or prompts the user to complete the configuration.
    */
   const args = process.argv.slice(2);
+
+  // User’s original CLI path
+  const userDir = process.cwd();
+
 
   // Initial placeholder for all project config options
   const props: Props = {
@@ -121,8 +129,20 @@ async function main() {
       Object.assign(props, { base, template, stack });
     }
   }
-  // Output the final parsed or prompted configuration
-  console.log("\nFinal Configuration:", props);
+
+  const folderName = props.stack.length ? props.stack.join("-") : "vite-default";
+  const templateFolder = path.resolve(
+    __dirname,
+    `../templates/${props.base}/${props.template}/${folderName}`
+  );
+  const insertScriptPath = path.join(templateFolder, "insert.mjs");
+  const targetDir = path.join(userDir, props.projectName);
+
+  // ▶️ Run the insert script from inside the template folder
+  execSync(`node insert.mjs "${targetDir}"`, {
+    stdio: "inherit",
+    cwd: templateFolder,
+  });
 }
 
 main();

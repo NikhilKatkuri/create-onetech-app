@@ -10,8 +10,8 @@
 const techStacks = [
   {
     base: "react",
-    templates: ["vite", "cra", "webpack", "parcel"],
-    stack: ["tailwind", "firebase", "auth", "zustand", "react-router-dom", "axios", "tanstack-query", "redux-toolkit", "i18next"]
+    templates: ["vite-js","vite-ts"],
+    stack: ["tailwind", "firebase", "i18next"]
   },
   {
     base: "nextjs",
